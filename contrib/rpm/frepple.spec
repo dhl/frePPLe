@@ -19,10 +19,10 @@
 
 Summary: Free Production PLanning
 Name: frepple
-Version: 2.2.beta
+Version: 3.0.beta
 Release: 1%{?dist}
-# Note on the license: frePPle is released with the AGPL license, version 3 or higher. 
-# The optional plugin module mod_lpsolver depends on the GLPK package which is 
+# Note on the license: frePPle is released with the AGPL license, version 3 or higher.
+# The optional plugin module mod_lpsolver depends on the GLPK package which is
 # licensed under GPL. That module is therefore disabled in this build.
 License: AGPLv3+
 Group: Applications/Productivity

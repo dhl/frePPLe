@@ -108,7 +108,7 @@ DECLARE_EXPORT void SolverMRP::solve(const Buffer* b, void* v)
         && prev
         && prev->getDate() >= theDate - b->getMinimumInterval())
       {
-       Buffer::flowplanlist::const_iterator prevbatchiter = b->getFlowPlans().end();
+        Buffer::flowplanlist::const_iterator prevbatchiter = b->getFlowPlans().end();
         for (Buffer::flowplanlist::const_iterator batchiter = prev;
           batchiter != b->getFlowPlans().end() && batchiter->getDate() >= theDate - b->getMinimumInterval();
           prevbatchiter = batchiter--)
