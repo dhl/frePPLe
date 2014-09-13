@@ -86,6 +86,10 @@ extern "C"
 #endif
 }
 
+#if GLP_MAJOR_VERSION != 4 || GLP_MINOR_VERSION < 40 || GLP_MINOR_VERSION >= 52
+#error Incompatible version of GLPK. Needs to be between 4.40 and 4.52.
+#endif
+
 namespace module_lp_solver
 {
 

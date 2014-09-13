@@ -55,7 +55,7 @@ class Calendar(AuditModel):
     help_text=_('Value to be used when no entry is effective')
     )
 
-  def __unicode__(self):
+  def __str__(self):
     return self.name
 
   class Meta(AuditModel.Meta):
@@ -87,8 +87,8 @@ class CalendarBucket(AuditModel):
   starttime = models.TimeField(_('start time'), blank=True, null=True, default=time(0, 0, 0))
   endtime = models.TimeField(_('end time'), blank=True, null=True, default=time(23, 59, 59))
 
-  def __unicode__(self):
-    return u"%s" % self.id
+  def __str__(self):
+    return "%s" % self.id
 
   class Meta(AuditModel.Meta):
     ordering = ['calendar', 'id']
@@ -108,7 +108,7 @@ class Location(AuditModel, HierarchyModel):
     help_text=_('Calendar defining the working hours and holidays of this location')
     )
 
-  def __unicode__(self):
+  def __str__(self):
     return self.name
 
   class Meta(AuditModel.Meta):
@@ -124,7 +124,7 @@ class Customer(AuditModel, HierarchyModel):
   category = models.CharField(_('category'), max_length=settings.CATEGORYSIZE, null=True, blank=True, db_index=True)
   subcategory = models.CharField(_('subcategory'), max_length=settings.CATEGORYSIZE, null=True, blank=True, db_index=True)
 
-  def __unicode__(self):
+  def __str__(self):
     return self.name
 
   class Meta(AuditModel.Meta):
@@ -149,7 +149,7 @@ class Item(AuditModel, HierarchyModel):
     help_text=_("Selling price of the item")
     )
 
-  def __unicode__(self):
+  def __str__(self):
     return self.name
 
   class Meta(AuditModel.Meta):
@@ -226,7 +226,7 @@ class Operation(AuditModel):
     help_text=_('Method to select preferred alternate')
     )
 
-  def __unicode__(self):
+  def __str__(self):
     return self.name
 
   def save(self, *args, **kwargs):
@@ -275,7 +275,7 @@ class SubOperation(AuditModel):
     help_text=_("Validity end date")
     )
 
-  def __unicode__(self):
+  def __str__(self):
     return self.operation.name \
       + "   " + str(self.priority) \
       + "   " + self.suboperation.name
@@ -377,7 +377,7 @@ class Buffer(AuditModel, HierarchyModel):
     help_text=_('Maximum size of replenishments of a procure buffer')
     )
 
-  def __unicode__(self):
+  def __str__(self):
     return self.name
 
   def save(self, *args, **kwargs):
@@ -407,7 +407,7 @@ class SetupMatrix(AuditModel):
   name = models.CharField(_('name'), max_length=settings.NAMESIZE, primary_key=True)
 
   # Methods
-  def __unicode__(self):
+  def __str__(self):
     return self.name
 
   class Meta(AuditModel.Meta):
@@ -443,8 +443,8 @@ class SetupRule(AuditModel):
     help_text=_("Cost of the conversion")
     )
 
-  def __unicode__(self):
-    return u"%s - %s" % (self.setupmatrix.name, self.priority)
+  def __str__(self):
+    return "%s - %s" % (self.setupmatrix.name, self.priority)
 
   class Meta(AuditModel.Meta):
     ordering = ['priority']
@@ -509,7 +509,7 @@ class Resource(AuditModel, HierarchyModel):
     )
 
   # Methods
-  def __unicode__(self):
+  def __str__(self):
     return self.name
 
   def save(self, *args, **kwargs):
@@ -536,7 +536,7 @@ class Skill(AuditModel):
     )
 
   # Methods
-  def __unicode__(self):
+  def __str__(self):
     return self.name
 
   class Meta(AuditModel.Meta):
@@ -628,7 +628,7 @@ class Flow(AuditModel):
     help_text=_('Method to select preferred alternate')
     )
 
-  def __unicode__(self):
+  def __str__(self):
     return '%s - %s' % (self.operation.name, self.thebuffer.name)
 
   class Meta(AuditModel.Meta):
@@ -678,7 +678,7 @@ class Load(AuditModel):
     help_text=_('Method to select preferred alternate')
     )
 
-  def __unicode__(self):
+  def __str__(self):
     return '%s - %s' % (self.operation.name, self.resource.name)
 
   class Meta(AuditModel.Meta):
@@ -713,7 +713,7 @@ class OperationPlan(AuditModel):
     related_name='xchildren', help_text=_('Hierarchical parent')
     )
 
-  def __unicode__(self):
+  def __str__(self):
     return str(self.id)
 
   class Meta(AuditModel.Meta):
@@ -788,7 +788,7 @@ class Demand(AuditModel, HierarchyModel):
     )
 
   # Convenience methods
-  def __unicode__(self):
+  def __str__(self):
     return self.name
 
   class Meta(AuditModel.Meta):

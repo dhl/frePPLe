@@ -23,7 +23,6 @@ This file is only an example. A different LP formulation will obviously
 require a different data file. Given the easy structure of this
 Python code this will remain a clean and simple piece of code.
 '''
-from __future__ import print_function
 import frepple
 import csv
 

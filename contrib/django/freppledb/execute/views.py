@@ -30,7 +30,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.views.decorators.csrf import csrf_protect
 from django.http import Http404, HttpResponseRedirect, HttpResponseServerError, HttpResponse
 from django.contrib import messages
-from django.utils.encoding import force_unicode
+from django.utils.encoding import force_text
 
 from freppledb.execute.models import Task, Scenario
 from freppledb.common.report import exportWorkbook, importWorkbook
@@ -121,7 +121,7 @@ def LaunchTask(request, action):
   except Exception as e:
     messages.add_message(
       request, messages.ERROR,
-      force_unicode(_('Failure launching action: %(msg)s') % {'msg': e})
+      force_text(_('Failure launching action: %(msg)s') % {'msg': e})
       )
     return HttpResponseRedirect('%s/execute/' % request.prefix)
 
@@ -312,7 +312,7 @@ def logfile(request):
       if f.tell() >= 50000:
         # Too big to display completely
         f.seek(-50000, os.SEEK_END)
-        logdata = force_unicode(_("Displaying only the last 50K from the log file")) + '...\n\n...' + force_unicode(f.read(50000))
+        logdata = force_text(_("Displaying only the last 50K from the log file")) + '...\n\n...' + force_text(f.read(50000))
       else:
         # Displayed completely
         f.seek(0, os.SEEK_SET)

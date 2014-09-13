@@ -24,7 +24,7 @@ from django.template.loader import get_template
 from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.utils.http import urlquote
-from django.utils.encoding import iri_to_uri, force_unicode
+from django.utils.encoding import iri_to_uri, force_text
 from django.utils.html import escape
 
 from freppledb.execute.models import Scenario
@@ -229,14 +229,14 @@ class SelectDatabaseNode(Node):
     scenarios = Scenario.objects.filter(status=u'In use').values('name')
     if len(scenarios) <= 1:
       return ''
-    s = [u'<form>%s&nbsp;<select id="database" name="%s" onchange="selectDatabase()">' % (force_unicode(_("Model:")), req.database) ]
+    s = [u'<form>%s&nbsp;<select id="database" name="%s" onchange="selectDatabase()">' % (force_text(_("Model:")), req.database) ]
     for i in scenarios:
       i = i['name']
       if i == req.database:
-        s.append(u'<option value="%s" selected="selected">%s</option>' % (i, i))
+        s.append('<option value="%s" selected="selected">%s</option>' % (i, i))
       else:
-        s.append(u'<option value="%s">%s</option>' % (i, i))
-    s.append(u'</select></form>')
+        s.append('<option value="%s">%s</option>' % (i, i))
+    s.append('</select></form>')
     return ''.join(s)
 
   def __repr__(self):
@@ -271,7 +271,7 @@ def duration(value):
   try:
     if value is None:
       return ''
-    value = Decimal(force_unicode(value))
+    value = Decimal(force_text(value))
     if value == 0:
       return '0 s'
     if value % 604800 == 0:

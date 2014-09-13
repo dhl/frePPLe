@@ -24,7 +24,6 @@ All other tests are running the Python interpreter embedded in the frePPLe
 executable.
 This test however runs frePPLe as Python extension module.
 '''
-from __future__ import print_function, unicode_literals
 
 # Add the frePPLe directory to the Python module search path
 import os

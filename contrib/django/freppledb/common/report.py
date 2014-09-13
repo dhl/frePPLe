@@ -30,13 +30,12 @@ It provides the following functionality:
 
 import codecs
 import csv
-import cStringIO
 from datetime import datetime, timedelta
 from decimal import Decimal
 import math
 import operator
 import json
-from StringIO import StringIO
+from io import StringIO
 from openpyxl import load_workbook, Workbook
 
 from django.contrib.auth.models import Group
@@ -57,7 +56,7 @@ from django.forms.models import modelform_factory
 from django.shortcuts import render
 from django.utils import translation, six
 from django.utils.decorators import method_decorator
-from django.utils.encoding import smart_str, iri_to_uri, force_unicode
+from django.utils.encoding import smart_str, iri_to_uri, force_text
 from django.utils.html import escape
 from django.utils.translation import ugettext as _
 from django.utils.formats import get_format
@@ -89,7 +88,7 @@ class GridField(object):
 
   def __init__(self, name, **kwargs):
     self.name = name
-    for key, value in kwargs.iteritems():
+    for key, value in kwargs.items():
       setattr(self, key, value)
     if 'key' in kwargs:
       self.editable = False
@@ -101,10 +100,10 @@ class GridField(object):
     if not 'field_name' in kwargs:
       self.field_name = self.name
 
-  def __unicode__(self):
+  def __str__(self):
     o = [ "name:'%s',index:'%s',editable:%s,label:'%s',align:'%s',title:false" %
           (self.name or '', self.name or '', self.editable and "true" or "false",
-           force_unicode(self.title).title().replace("'", "\\'"), self.align
+           force_text(self.title).title().replace("'", "\\'"), self.align
            ), ]
     if self.key:
       o.append( ",key:true" )
@@ -121,7 +120,7 @@ class GridField(object):
     if self.hidden:
       o.append(",hidden:true")
     if self.extra:
-      o.append(",%s" % force_unicode(self.extra))
+      o.append(",%s" % force_text(self.extra))
     return ''.join(o)
 
   name = None
@@ -246,28 +245,28 @@ class UTF8Recoder:
     # Detect the encoding of the data by scanning the BOM.
     # Skip the BOM header if it is found.
     if data.startswith(codecs.BOM_UTF32_BE):
-      self.reader = codecs.getreader('utf_32_be')(cStringIO.StringIO(data))
+      self.reader = codecs.getreader('utf_32_be')(io.StringIO(data))
       self.reader.read(1)
     elif data.startswith(codecs.BOM_UTF32_LE):
-      self.reader = codecs.getreader('utf_32_le')(cStringIO.StringIO(data))
+      self.reader = codecs.getreader('utf_32_le')(io.StringIO(data))
       self.reader.read(1)
     elif data.startswith(codecs.BOM_UTF16_BE):
-      self.reader = codecs.getreader('utf_16_be')(cStringIO.StringIO(data))
+      self.reader = codecs.getreader('utf_16_be')(io.StringIO(data))
       self.reader.read(1)
     elif data.startswith(codecs.BOM_UTF16_LE):
-      self.reader = codecs.getreader('utf_16_le')(cStringIO.StringIO(data))
+      self.reader = codecs.getreader('utf_16_le')(io.StringIO(data))
       self.reader.read(1)
     elif data.startswith(codecs.BOM_UTF8):
-      self.reader = codecs.getreader('utf-8')(cStringIO.StringIO(data))
+      self.reader = codecs.getreader('utf-8')(io.StringIO(data))
       self.reader.read(1)
     else:
       # No BOM header found. We assume the data is encoded in the default CSV character set.
-      self.reader = codecs.getreader(settings.CSV_CHARSET)(cStringIO.StringIO(data))
+      self.reader = codecs.getreader(settings.CSV_CHARSET)(io.StringIO(data))
 
   def __iter__(self):
     return self
 
-  def next(self):
+  def __next__(self):
     return self.reader.next().encode("utf-8")
 
 
@@ -279,9 +278,9 @@ class UnicodeReader:
   def __init__(self, data, **kwds):
     self.reader = csv.reader(UTF8Recoder(data), **kwds)
 
-  def next(self):
-    row = self.reader.next()
-    return [unicode(s, "utf-8") for s in row]
+  def __next__(self):
+    row = next(self.reader)
+    return [str(s, "utf-8") for s in row]
 
   def __iter__(self):
     return self
@@ -434,7 +433,7 @@ class GridReport(View):
     # Filter based on the start and end date
     request.report_startdate = start
     request.report_enddate = end
-    request.report_bucket = unicode(bucket)
+    request.report_bucket = str(bucket)
     if bucket:
       res = BucketDetail.objects.using(request.database).filter(bucket=bucket)
       if start:
@@ -451,7 +450,7 @@ class GridReport(View):
   def dispatch(self, request, *args, **kwargs):
     # Verify the user is authorized to view the report
     for perm in self.permissions:
-      if not request.user.has_perm(u"%s.%s" % (self.getAppLabel(), perm[0])):
+      if not request.user.has_perm("%s.%s" % (self.getAppLabel(), perm[0])):
         return HttpResponseForbidden('<h1>%s</h1>' % _('Permission denied'))
 
     # Unescape special characters in the arguments
@@ -474,7 +473,7 @@ class GridReport(View):
     count = -1
     for i in cls.rows:
       count += 1
-      result.append(u"{%s,width:%s,counter:%d%s%s,searchoptions:{searchhidden: true}}" % (
+      result.append("{%s,width:%s,counter:%d%s%s,searchoptions:{searchhidden: true}}" % (
          i, i.width, count,
          count < cls.frozenColumns and ',frozen:true' or '',
          is_popup and ',popup:true' or ''
@@ -486,11 +485,11 @@ class GridReport(View):
   def _generate_spreadsheet_data(reportclass, request, *args, **kwargs):
     # Create a workbook
     wb = Workbook(optimized_write=True)
-    title = force_unicode(reportclass.model and reportclass.model._meta.verbose_name or reportclass.title)
+    title = force_text(reportclass.model and reportclass.model._meta.verbose_name or reportclass.title)
     ws = wb.create_sheet(title=title)
 
     # Write a header row
-    ws.append([ force_unicode(f.title).title() for f in reportclass.rows if f.title and not f.hidden ])
+    ws.append([ force_text(f.title).title() for f in reportclass.rows if f.title and not f.hidden ])
 
     # Loop over all records
     fields = [ i.field_name for i in reportclass.rows if i.field_name and not i.hidden ]
@@ -532,7 +531,7 @@ class GridReport(View):
     sf.write(getBOM(encoding))
 
     # Choose fields to export
-    writer.writerow([ force_unicode(f.title).title().encode(encoding, "ignore") for f in reportclass.rows if f.title and not f.hidden ])
+    writer.writerow([ force_text(f.title).title().encode(encoding, "ignore") for f in reportclass.rows if f.title and not f.hidden ])
     fields = [ i.field_name for i in reportclass.rows if i.field_name and not i.hidden ]
 
     # Write a header row
@@ -643,8 +642,8 @@ class GridReport(View):
       for f in reportclass.rows:
         if not f.name:
           continue
-        if isinstance(i[f.field_name], basestring) or isinstance(i[f.field_name], (list, tuple)):
-          s = json.dumps(i[f.field_name], encoding=settings.DEFAULT_CHARSET)
+        if isinstance(i[f.field_name], str) or isinstance(i[f.field_name], (list, tuple)):
+          s = json.dumps(i[f.field_name])
         else:
           s = '"%s"' % i[f.field_name]
         if first2:
@@ -698,7 +697,7 @@ class GridReport(View):
       is_popup = '_popup' in request.GET
       context = {
         'reportclass': reportclass,
-        'title': (args and args[0] and _('%(title)s for %(entity)s') % {'title': force_unicode(reportclass.title), 'entity': force_unicode(args[0])}) or reportclass.title,
+        'title': (args and args[0] and _('%(title)s for %(entity)s') % {'title': force_text(reportclass.title), 'entity': force_text(args[0])}) or reportclass.title,
         'preferences': None,
         'colmodel': reportclass._render_colmodel(is_popup, mode),
         'cross_list': reportclass._render_cross() if hasattr(reportclass, 'crosses') else None,
@@ -718,7 +717,7 @@ class GridReport(View):
         'active_tab': 'plan',
         'mode': mode
         }
-      for k, v in reportclass.extra_context(request, *args, **kwargs).iteritems():
+      for k, v in reportclass.extra_context(request, *args, **kwargs).items():
         context[k] = v
       return render(request, reportclass.template, context)
     elif fmt == 'json':
@@ -769,8 +768,8 @@ class GridReport(View):
               LogEntry(
                 user_id=request.user.id,
                 content_type_id=content_type_id,
-                object_id=force_unicode(key),
-                object_repr=force_unicode(key)[:200],
+                object_id=force_text(key),
+                object_repr=force_text(key)[:200],
                 action_flag=DELETION
               ).save(using=request.database)
             except reportclass.model.DoesNotExist:
@@ -801,7 +800,7 @@ class GridReport(View):
                 user_id=request.user.pk,
                 content_type_id=content_type_id,
                 object_id=obj.pk,
-                object_repr=force_unicode(obj),
+                object_repr=force_text(obj),
                 action_flag=ADDITION,
                 change_message=_('Copied from %s.') % key
               ).save(using=request.database)
@@ -836,7 +835,7 @@ class GridReport(View):
                 user_id=request.user.pk,
                 content_type_id=content_type_id,
                 object_id=obj.pk,
-                object_repr=force_unicode(obj),
+                object_repr=force_text(obj),
                 action_flag=CHANGE,
                 change_message=_('Changed %s.') % get_text_list(form.changed_data, _('and'))
               ).save(using=request.database)
@@ -900,7 +899,7 @@ class GridReport(View):
       for m in deps:
         messages.add_message(
           request, messages.INFO,
-          _('Erasing data from %(model)s') % {'model': force_unicode(m._meta.verbose_name)}
+          _('Erasing data from %(model)s') % {'model': force_text(m._meta.verbose_name)}
           )
 
     # Finished successfully
@@ -1033,7 +1032,7 @@ class GridReport(View):
                       user_id=request.user.pk,
                       content_type_id=content_type_id,
                       object_id=obj.pk,
-                      object_repr=force_unicode(obj),
+                      object_repr=force_text(obj),
                       action_flag=it and CHANGE or ADDITION,
                       change_message=_('Changed %s.') % get_text_list(form.changed_data, _('and'))
                     ).save(using=request.database)
@@ -1216,7 +1215,7 @@ class GridReport(View):
                       user_id=request.user.pk,
                       content_type_id=content_type_id,
                       object_id=obj.pk,
-                      object_repr=force_unicode(obj),
+                      object_repr=force_text(obj),
                       action_flag=it and CHANGE or ADDITION,
                       change_message=_('Changed %s.') % get_text_list(form.changed_data, _('and'))
                     ).save(using=request.database)
@@ -1313,7 +1312,7 @@ class GridReport(View):
     # Django-style filtering (which uses URL parameters) are converted to a jqgrid filter expression
     filtered = False
     filters = ['{"groupOp":"AND","rules":[']
-    for i, j in request.GET.iteritems():
+    for i, j in request.GET.items():
       for r in reportclass.rows:
         if r.field_name and i.startswith(r.field_name):
           operator = (i == r.field_name) and 'exact' or i[i.rfind('_') + 1:]
@@ -1395,7 +1394,7 @@ class GridReport(View):
 
     # Django-style filtering, using URL parameters
     if plus_django_style:
-      for i, j in request.GET.iteritems():
+      for i, j in request.GET.items():
         for r in reportclass.rows:
           if r.name and i.startswith(r.field_name):
             try:
@@ -1445,7 +1444,7 @@ class GridPivot(GridReport):
     count = -1
     for i in cls.rows:
       count += 1
-      result.append(u"{%s,width:%s,counter:%d,frozen:true%s,searchoptions:{searchhidden: true},fixed:true}" % (
+      result.append("{%s,width:%s,counter:%d,frozen:true%s,searchoptions:{searchhidden: true},fixed:true}" % (
          i, i.width, count,
          is_popup and ',popup:true' or ''
          ))
@@ -1535,7 +1534,7 @@ class GridPivot(GridReport):
         first2 = True
         for f in reportclass.rows:
           try:
-            s = isinstance(i[f.name], basestring) and escape(i[f.name].encode(settings.DEFAULT_CHARSET, "ignore")) or i[f.name]
+            s = isinstance(i[f.name], str) and escape(i[f.name].encode(settings.DEFAULT_CHARSET, "ignore")) or i[f.name]
             if first2:
               r.append('"%s":"%s"' % (f.name, s))
               first2 = False
@@ -1583,12 +1582,12 @@ class GridPivot(GridReport):
 
     # Write a header row
     fields = [
-      force_unicode(f.title).title().encode(encoding, "ignore")
+      force_text(f.title).title().encode(encoding, "ignore")
       for f in reportclass.rows
       if f.name and not f.hidden
       ]
     if listformat:
-      fields.extend([ capfirst(force_unicode(_('bucket'))).encode(encoding, "ignore") ])
+      fields.extend([ capfirst(force_text(_('bucket'))).encode(encoding, "ignore") ])
       fields.extend([ capfirst(_(f[1].get('title', _(f[0])))).encode(encoding, "ignore") for f in reportclass.crosses ])
     else:
       fields.extend( [capfirst(_('data field')).encode(encoding, "ignore")])
@@ -1685,7 +1684,7 @@ class GridPivot(GridReport):
   def _generate_spreadsheet_data(reportclass, request, *args, **kwargs):
     # Create a workbook
     wb = Workbook(optimized_write=True)
-    ws = wb.create_sheet(title=force_unicode(reportclass.model._meta.verbose_name))
+    ws = wb.create_sheet(title=force_text(reportclass.model._meta.verbose_name))
 
     # Prepare the query
     listformat = (request.GET.get('format', 'spreadsheetlist') == 'spreadsheetlist')
@@ -1698,12 +1697,12 @@ class GridPivot(GridReport):
 
     # Write a header row
     fields = [
-      force_unicode(f.title).title()
+      force_text(f.title).title()
       for f in reportclass.rows
       if f.name and not f.hidden
       ]
     if listformat:
-      fields.extend([ capfirst(force_unicode(_('bucket'))) ])
+      fields.extend([ capfirst(force_text(_('bucket'))) ])
       fields.extend([ capfirst(_(f[1].get('title', _(f[0])))) for f in reportclass.crosses ])
     else:
       fields.extend( [capfirst(_('data field'))])
@@ -1840,16 +1839,16 @@ def exportWorkbook(request):
           lastmodified = True  # Put the last-modified field at the very end
         else:
           fields.append(connections[request.database].ops.quote_name(i.column))
-          header.append(force_unicode(i.verbose_name))
+          header.append(force_text(i.verbose_name))
       if source:
         fields.append("source")
-        header.append(force_unicode(_("source")))
+        header.append(force_text(_("source")))
       if lastmodified:
         fields.append("lastmodified")
-        header.append(force_unicode(_("last modified")))
+        header.append(force_text(_("last modified")))
       # Create sheet
       ok = True
-      ws = wb.create_sheet(title=force_unicode(model._meta.verbose_name))
+      ws = wb.create_sheet(title=force_text(model._meta.verbose_name))
       # Write a header row
       ws.append(header)
       # Loop over all records
@@ -1909,10 +1908,10 @@ def importWorkbook(request):
           contenttype_id = ct
           break
       if not model or model in EXCLUDE_FROM_BULK_OPERATIONS:
-        errors.append(force_unicode(_("Ignoring data in worksheet: %s") % ws_name))
+        errors.append(force_text(_("Ignoring data in worksheet: %s") % ws_name))
       elif not request.user.has_perm('%s.%s' % (model._meta.app_label, get_permission_codename('add', model._meta))):
         # Check permissions
-        errors.append(force_unicode(_("You don't permissions to add: %s") % ws_name))
+        errors.append(force_text(_("You don't permissions to add: %s") % ws_name))
       else:
         deps = set([model])
         GridReport.dependent_models(model, deps)
@@ -1965,7 +1964,7 @@ def importWorkbook(request):
                   break
               if not ok:
                 header_ok = False
-                errors.append(force_unicode(string_concat(
+                errors.append(force_text(string_concat(
                   model._meta.verbose_name, ': ', _('Incorrect field %(column)s') % {'column': value}
                   )))
                 numerrors += 1
@@ -1975,7 +1974,7 @@ def importWorkbook(request):
             if not has_pk_field and not isinstance(model._meta.pk, AutoField):
               # The primary key is not an auto-generated id and it is not mapped in the input...
               header_ok = False
-              errors.append(force_unicode(string_concat(
+              errors.append(force_text(string_concat(
                 model._meta.verbose_name, ': ', _('Missing primary key field %(key)s') % {'key': model._meta.pk.name}
                 )))
               numerrors += 1
@@ -2032,7 +2031,7 @@ def importWorkbook(request):
                     user_id=request.user.pk,
                     content_type_id=contenttype_id,
                     object_id=obj.pk,
-                    object_repr=force_unicode(obj),
+                    object_repr=force_text(obj),
                     action_flag=it and CHANGE or ADDITION,
                     change_message=_('Changed %s.') % get_text_list(form.changed_data, _('and'))
                   ).save(using=request.database)
@@ -2043,14 +2042,14 @@ def importWorkbook(request):
               except Exception:
                 # Validation fails
                 for error in form.non_field_errors():
-                  errors.append(force_unicode(string_concat(
+                  errors.append(force_text(string_concat(
                     model._meta.verbose_name, ': ', _('Row %(rownum)s: %(message)s') % {
                       'rownum': rownum, 'message': error
                     })))
                   numerrors += 1
                 for field in form:
                   for error in field.errors:
-                    errors.append(force_unicode(string_concat(
+                    errors.append(force_text(string_concat(
                       model._meta.verbose_name, ': ', _('Row %(rownum)s field %(field)s: %(data)s: %(message)s') % {
                         'rownum': rownum, 'data': d[field.name],
                         'field': field.name, 'message': error

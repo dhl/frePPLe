@@ -1,7 +1,7 @@
 
                BUILD INSTRUCTIONS ON WINDOWS
                -----------------------------
-              USING MICROSOFT VISUAL C++ 2008
+              USING MICROSOFT VISUAL C++ 2010
               -------------------------------
 
 The frePPLe source distribution comes with Microsoft Visual C++ projects and
@@ -9,23 +9,23 @@ workspaces to build the package. This document contains instructions on how to
 use these workspaces and some notes specific to the use of this compiler.
 
 Note:
-Using Visual Studio 2010 will NOT work: Python and its extension modules
-are all compiled with Visual C++ 2008, and the frePPle-Python requires you
-to use the same compiler and CRTs. Failure to use the same CRT causes trouble.
+Using other Visual Studio versions will NOT work: Python and its extension
+modules are all compiled with Visual C++ 2010, and we need to use the same
+compiler and CRTs. Failure to use the same CRT causes trouble.
 
 Note:
-Only 32-bit builds are currently supported on Windows. FrePPLe compiles and 
-works fine in 64-bit environments, but there is no reason right now to 
+Only 32-bit builds are currently supported on Windows. FrePPLe compiles and
+works fine in 64-bit environments, but there is no reason right now to
 support both on Windows.
 
 
 PREREQUISITES
 -------------
 
-1. Install Visual Studio 2008 (aka vc9)
-2. Install xerces-c 3.*
-   Installing the 32-bit pre-compiled binaries for vc9 are easiest.
-3. Install Python 2.7.*
+1. Install Visual Studio 2010 SP1 (aka vc10)
+2. Install xerces-c 3.1.1*
+   Installing the 32-bit pre-compiled binaries for vc10 are easiest.
+3. Install Python 3.4.*
 
 
 BUILD INSTRUCTIONS FROM THE COMMAND LINE
@@ -35,7 +35,8 @@ A convenience build script is provided to compile frePPle.
 
 1. Edit the file build.bat
    The following variables need to be edited:
-     - VC: Installation directory of Visual Studio C++ 2008
+     - DOTNET: Installation directory of the Microsoft .NET framework
+     - VC: Installation directory of Visual Studio C++ 2010
      - PYTHON: Installation directory of the Python language
      - XERCES: Installation directory of the Xerces-C library
      - GLPK:  *Optional.* Installation directory of the GNU Linear Programming Kit
